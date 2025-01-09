@@ -186,37 +186,38 @@ with st.container():
             if blocca_richiesta_giornaliera(ip):
                 st.error(f"Richiesta giornaliera bloccata per l'IP: {ip}. Riprova domani.")
             else:
-                if operazione == "Cercare un nuovo codice ATECO":
-                    if not descrizione_attivita:
-                        st.error("Per favore, inserisci una descrizione dell'attività")
+                with st.spinner("Elaborazione in corso... (il risultato potrebbe richiedere almeno 1 minuto)"):
+                    if operazione == "Cercare un nuovo codice ATECO":
+                        if not descrizione_attivita:
+                            st.error("Per favore, inserisci una descrizione dell'attività")
+                        else:
+                            # Preparazione dati per il nuovo flusso Dify
+                            dati = {
+                                "tipo_operazione": "nuovo_codice",
+                                "richiesta": descrizione_attivita
+                            }
                     else:
-                        # Preparazione dati per il nuovo flusso Dify
-                        dati = {
-                            "tipo_operazione": "nuovo_codice",
-                            "richiesta": descrizione_attivita
-                        }
-                else:
-                    if not codice_ateco_2007:
-                        st.error("Per favore, inserisci il codice ATECO 2007")
+                        if not codice_ateco_2007:
+                            st.error("Per favore, inserisci il codice ATECO 2007")
+                        else:
+                            # Preparazione dati per il nuovo flusso Dify
+                            dati = {
+                                "tipo_operazione": "aggiornamento_codice",
+                                "richiesta": "Aggiornamento codice ATECO",
+                                "codice_ateco": codice_ateco_2007,
+                                "attivita": attivita_camera_commercio if attivita_camera_commercio else "",
+                                "sito_internet": sito_web if sito_web else ""
+                            }
+            
+                    # Invio richiesta all'API e visualizzazione risposta
+                    risposta_api = inviare_messaggio_api(dati)
+                    if isinstance(risposta_api, dict) and 'data' in risposta_api:
+                        if 'outputs' in risposta_api['data'] and 'output' in risposta_api['data']['outputs']:
+                            st.markdown(risposta_api['data']['outputs']['output'])
+                        else:
+                            st.write("Formato della risposta non valido")
                     else:
-                        # Preparazione dati per il nuovo flusso Dify
-                        dati = {
-                            "tipo_operazione": "aggiornamento_codice",
-                            "richiesta": "Aggiornamento codice ATECO",
-                            "codice_ateco": codice_ateco_2007,
-                            "attivita": attivita_camera_commercio if attivita_camera_commercio else "",
-                            "sito_internet": sito_web if sito_web else ""
-                        }
-        
-                # Invio richiesta all'API e visualizzazione risposta
-                risposta_api = inviare_messaggio_api(dati)
-                if isinstance(risposta_api, dict) and 'data' in risposta_api:
-                    if 'outputs' in risposta_api['data'] and 'output' in risposta_api['data']['outputs']:
-                        st.markdown(risposta_api['data']['outputs']['output'])
-                    else:
-                        st.write("Formato della risposta non valido")
-                else:
-                    st.write(f"Errore nella risposta: {risposta_api}")
+                        st.write(f"Errore nella risposta: {risposta_api}")
     
     st.markdown("---")
     st.markdown("### Allegati")
