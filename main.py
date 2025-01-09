@@ -6,10 +6,25 @@ def rispondi_domanda_ateco(domanda):
     # Logica per rispondere alla domanda
     return "Risposta unica basata sul codice ATECO"
 
+import streamlit as st
+import requests
+from datetime import datetime, timedelta
+
 # Funzione per bloccare richieste giornaliere basate sull'IP
 def blocca_richiesta_giornaliera(ip):
-    # Logica per bloccare la richiesta
-    return True
+    if 'last_request_time' not in st.session_state:
+        st.session_state['last_request_time'] = {}
+    
+    last_request_time = st.session_state['last_request_time'].get(ip)
+    
+    if last_request_time:
+        last_request_date = datetime.fromisoformat(last_request_time)
+        today = datetime.now().date()
+        if last_request_date.date() == today:
+            return True
+    
+    st.session_state['last_request_time'][ip] = datetime.now().isoformat()
+    return False
 
 # Funzione per inviare un messaggio all'API e restituire la risposta
 def inviare_messaggio_api(messaggio):
@@ -214,3 +229,4 @@ ip = requests.get('https://api.ipify.org').text
 if ip:
     if blocca_richiesta_giornaliera(ip):
         st.write(f"Richiesta giornaliera bloccata per l'IP: {ip}")
+
