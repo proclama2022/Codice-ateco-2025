@@ -12,6 +12,12 @@ from datetime import datetime, timedelta
 
 # Funzione per bloccare richieste giornaliere basate sull'IP
 def blocca_richiesta_giornaliera(ip):
+    whitelist = st.secrets.get("ip_whitelist", [])
+    print(f"Whitelist: {whitelist}")
+    print(f"Checking IP: {ip}")
+    if ip in whitelist:
+        return False
+    
     if 'last_request_time' not in st.session_state:
         st.session_state['last_request_time'] = {}
     
